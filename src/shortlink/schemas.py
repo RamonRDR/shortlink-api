@@ -1,7 +1,7 @@
 """Explicit public request and response contracts."""
 
 import ipaddress
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import Annotated, Self
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
@@ -52,7 +52,7 @@ class LinkCreate(BaseModel):
     @model_validator(mode="after")
     def future_expiry(self) -> Self:
         if self.expires_at is not None:
-            if self.expires_at.tzinfo is None or self.expires_at <= datetime.now(timezone.utc):
+            if self.expires_at.tzinfo is None or self.expires_at <= datetime.now(UTC):
                 raise ValueError("expires_at must be a future timezone-aware timestamp")
         return self
 
@@ -66,7 +66,7 @@ class LinkUpdate(BaseModel):
         if "is_active" in self.model_fields_set and self.is_active is None:
             raise ValueError("is_active cannot be null")
         if self.expires_at is not None:
-            if self.expires_at.tzinfo is None or self.expires_at <= datetime.now(timezone.utc):
+            if self.expires_at.tzinfo is None or self.expires_at <= datetime.now(UTC):
                 raise ValueError("expires_at must be a future timezone-aware timestamp")
         return self
 

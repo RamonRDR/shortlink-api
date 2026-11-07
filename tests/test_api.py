@@ -1,7 +1,7 @@
 """End-to-end behavior against migrated PostgreSQL."""
 
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 import pytest
@@ -32,7 +32,9 @@ def test_authentication_required(client: TestClient, auth: dict[str, str]) -> No
     for path in ["/api/v1/links", "/api/v1/analytics"]:
         assert client.get(path).status_code == 401
         assert client.get(path, headers={"X-API-Key": "wrong"}).status_code == 401
-    assert client.post("/api/v1/links", json={"target_url": "https://example.org"}).status_code == 401
+    assert (
+        client.post("/api/v1/links", json={"target_url": "https://example.org"}).status_code == 401
+    )
     assert client.get("/api/v1/links", headers=auth).status_code == 200
 
 
@@ -68,19 +70,20 @@ def test_redirect_and_analytics(client: TestClient, auth: dict[str, str]) -> Non
         assert db.scalar(select(DailyClick.clicks)) == 3
 
 
-@pytest.mark.parametrize("target", [
-    "javascript:alert(1)",
-    "file:///etc/passwd",
-    "ftp://example.org/a",
-    "http://127.0.0.1/admin",
-    "http://localhost:8000/secrets",
-    "https://user:secret@example.org/",
-    "http://192.168.1.2",
-    "http://[::1]/",
-])
-def test_unsafe_targets_rejected(
-    client: TestClient, auth: dict[str, str], target: str
-) -> None:
+@pytest.mark.parametrize(
+    "target",
+    [
+        "javascript:alert(1)",
+        "file:///etc/passwd",
+        "ftp://example.org/a",
+        "http://127.0.0.1/admin",
+        "http://localhost:8000/secrets",
+        "https://user:secret@example.org/",
+        "http://192.168.1.2",
+        "http://[::1]/",
+    ],
+)
+def test_unsafe_targets_rejected(client: TestClient, auth: dict[str, str], target: str) -> None:
     assert create(client, auth, target_url=target).status_code == 422
 
 
@@ -112,15 +115,21 @@ def test_generated_collision_exhaustion(client: TestClient, auth: dict[str, str]
 def test_missing_inactive_expired_deleted(client: TestClient, auth: dict[str, str]) -> None:
     assert client.get("/nonexistent", follow_redirects=False).status_code == 404
     assert create(client, auth, alias="disabled").status_code == 201
-    assert client.patch("/api/v1/links/disabled", headers=auth, json={"is_active": False}).status_code == 200
+    assert (
+        client.patch("/api/v1/links/disabled", headers=auth, json={"is_active": False}).status_code
+        == 200
+    )
     assert client.get("/disabled", follow_redirects=False).status_code == 404
-    assert client.patch("/api/v1/links/disabled", headers=auth, json={"is_active": True}).status_code == 200
+    assert (
+        client.patch("/api/v1/links/disabled", headers=auth, json={"is_active": True}).status_code
+        == 200
+    )
     assert client.get("/disabled", follow_redirects=False).status_code == 302
     assert create(client, auth, alias="expired").status_code == 201
     with Session(get_engine()) as db:
         link = db.scalar(select(Link).where(Link.code == "expired"))
         assert link is not None
-        link.expires_at = datetime.now(timezone.utc) - timedelta(days=1)
+        link.expires_at = datetime.now(UTC) - timedelta(days=1)
         db.commit()
     assert client.get("/expired", follow_redirects=False).status_code == 404
     assert client.delete("/api/v1/links/disabled", headers=auth).status_code == 204
@@ -131,19 +140,31 @@ def test_missing_inactive_expired_deleted(client: TestClient, auth: dict[str, st
 
 
 def test_expiry_input_and_patch(client: TestClient, auth: dict[str, str]) -> None:
-    old = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
-    future = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
+    old = (datetime.now(UTC) - timedelta(hours=1)).isoformat()
+    future = (datetime.now(UTC) + timedelta(days=7)).isoformat()
     assert create(client, auth, expires_at=old).status_code == 422
     assert create(client, auth, expires_at=future, alias="future").status_code == 201
-    assert client.patch("/api/v1/links/future", json={"expires_at": old}, headers=auth).status_code == 422
-    assert client.patch("/api/v1/links/future", json={"is_active": None}, headers=auth).status_code == 422
-    assert client.patch("/api/v1/links/future", json={"expires_at": None}, headers=auth).status_code == 200
+    assert (
+        client.patch("/api/v1/links/future", json={"expires_at": old}, headers=auth).status_code
+        == 422
+    )
+    assert (
+        client.patch("/api/v1/links/future", json={"is_active": None}, headers=auth).status_code
+        == 422
+    )
+    assert (
+        client.patch("/api/v1/links/future", json={"expires_at": None}, headers=auth).status_code
+        == 200
+    )
 
 
 def test_list_pagination_filter(client: TestClient, auth: dict[str, str]) -> None:
     for code in ["alpha", "bravo", "charlie"]:
         assert create(client, auth, alias=code).status_code == 201
-    assert client.patch("/api/v1/links/bravo", json={"is_active": False}, headers=auth).status_code == 200
+    assert (
+        client.patch("/api/v1/links/bravo", json={"is_active": False}, headers=auth).status_code
+        == 200
+    )
     response = client.get("/api/v1/links?limit=2&offset=1", headers=auth)
     assert response.status_code == 200
     assert response.json()["total"] == 3
@@ -164,7 +185,6 @@ def test_rate_limit_unit() -> None:
 
 
 def test_rate_limit_http(client: TestClient, auth: dict[str, str]) -> None:
-    from shortlink.config import get_settings
 
     settings = get_settings().model_copy(update={"max_requests_per_minute": 1})
     app.dependency_overrides[get_settings] = lambda: settings
@@ -206,10 +226,12 @@ def test_health_handles_database_error(client: TestClient) -> None:
 def test_concurrent_redirects(client: TestClient, auth: dict[str, str]) -> None:
     assert create(client, auth, alias="parallel").status_code == 201
     with ThreadPoolExecutor(max_workers=8) as pool:
-        results = list(pool.map(
-            lambda _: client.get("/parallel", follow_redirects=False).status_code,
-            range(24),
-        ))
+        results = list(
+            pool.map(
+                lambda _: client.get("/parallel", follow_redirects=False).status_code,
+                range(24),
+            )
+        )
     assert results == [302] * 24
     stats = client.get("/api/v1/links/parallel/analytics", headers=auth).json()
     assert stats["total_clicks"] == 24

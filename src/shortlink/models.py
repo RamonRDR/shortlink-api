@@ -45,7 +45,7 @@ class Link(Base):
     )
     last_accessed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
-    daily_clicks: Mapped[list["DailyClick"]] = relationship(
+    daily_clicks: Mapped[list[DailyClick]] = relationship(
         back_populates="link", cascade="all, delete-orphan"
     )
 

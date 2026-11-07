@@ -37,7 +37,9 @@ def health(db: Db) -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/api/v1/links", response_model=LinkRead, status_code=status.HTTP_201_CREATED, tags=["links"])
+@app.post(
+    "/api/v1/links", response_model=LinkRead, status_code=status.HTTP_201_CREATED, tags=["links"]
+)
 def create(payload: LinkCreate, db: Db, settings: Config, _: Admin) -> LinkRead:
     return serialize_link(create_link(db, payload), str(settings.base_url))
 

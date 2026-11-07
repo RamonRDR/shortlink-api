@@ -2,7 +2,7 @@
 
 import secrets
 import string
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import HTTPException
 from sqlalchemy import func, select, update
@@ -72,14 +72,14 @@ def update_link(session: Session, link: Link, payload: LinkUpdate) -> Link:
 
 
 def delete_link(session: Session, link: Link) -> None:
-    link.deleted_at = datetime.now(timezone.utc)
+    link.deleted_at = datetime.now(UTC)
     link.is_active = False
     session.commit()
 
 
 def record_redirect(session: Session, code: str) -> str:
     """Lock the link row through UPDATE, then atomically upsert the daily counter."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     stmt = (
         update(Link)
         .where(
@@ -114,7 +114,9 @@ def list_links(
     if active is not None:
         query = query.where(Link.is_active == active)
     total = session.scalar(select(func.count()).select_from(query.subquery())) or 0
-    items = list(session.scalars(query.order_by(Link.created_at.desc(), Link.id.desc()).limit(
-        limit
-    ).offset(offset)))
+    items = list(
+        session.scalars(
+            query.order_by(Link.created_at.desc(), Link.id.desc()).limit(limit).offset(offset)
+        )
+    )
     return items, total

@@ -42,8 +42,12 @@ def rate_limited_admin(
 ) -> str:
     remaining, retry = limiter.check(principal, settings.max_requests_per_minute)
     if retry:
-        raise HTTPException(status_code=429, detail="Rate limit exceeded", headers={
-            "Retry-After": str(retry),
-        })
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit exceeded",
+            headers={
+                "Retry-After": str(retry),
+            },
+        )
     response.headers["X-RateLimit-Remaining"] = str(remaining)
     return principal
