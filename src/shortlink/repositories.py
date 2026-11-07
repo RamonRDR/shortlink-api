@@ -60,9 +60,7 @@ def increment_and_track(session: Session, code: str, now: datetime) -> str | Non
     return str(target_url)
 
 
-def page(
-    session: Session, limit: int, offset: int, active: bool | None
-) -> tuple[list[Link], int]:
+def page(session: Session, limit: int, offset: int, active: bool | None) -> tuple[list[Link], int]:
     query = select(Link).where(Link.deleted_at.is_(None))
     if active is not None:
         query = query.where(Link.is_active == active)

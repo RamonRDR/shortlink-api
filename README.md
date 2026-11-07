@@ -135,7 +135,7 @@ requests redirect through the same code.
 
 ## Testing and GitHub Actions
 
-With a dedicated test database and configured environment variables:
+With a dedicated test database (its name must end in _test) and configured environment variables:
 
     ruff check .
     ruff format --check .

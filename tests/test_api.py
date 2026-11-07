@@ -10,7 +10,7 @@ from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from shortlink.config import get_settings
+from shortlink.config import Settings, get_settings
 from shortlink.db import get_engine, get_session
 from shortlink.main import app
 from shortlink.models import DailyClick, Link
@@ -236,3 +236,13 @@ def test_concurrent_redirects(client: TestClient, auth: dict[str, str]) -> None:
     stats = client.get("/api/v1/links/parallel/analytics", headers=auth).json()
     assert stats["total_clicks"] == 24
     assert sum(record["clicks"] for record in stats["daily"]) == 24
+
+
+def test_placeholder_key_is_rejected() -> None:
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        Settings(
+            database_url="postgresql+psycopg://shortlink:password@localhost:5432/shortlink_test",
+            admin_api_key="replace-with-a-random-key-at-least-32-characters-long",
+        )

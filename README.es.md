@@ -124,7 +124,7 @@ PostgreSQL mantienen los totales consistentes ante solicitudes simultáneas.
 
 ## Pruebas y GitHub Actions
 
-Con una base de datos de prueba aislada y variables configuradas:
+Con una base de datos de prueba aislada (nombre terminado en _test) y variables configuradas:
 
     ruff check .
     ruff format --check .

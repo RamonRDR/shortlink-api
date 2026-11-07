@@ -124,7 +124,7 @@ utilizam transação PostgreSQL e atualização atômica.
 
 ## Testes e CI
 
-Com banco de testes isolado e variáveis configuradas:
+Com banco de testes isolado (nome terminado em _test) e variáveis configuradas:
 
     ruff check .
     ruff format --check .
