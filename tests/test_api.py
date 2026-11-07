@@ -246,3 +246,42 @@ def test_placeholder_key_is_rejected() -> None:
             database_url="postgresql+psycopg://shortlink:password@localhost:5432/shortlink_test",
             admin_api_key="replace-with-a-random-key-at-least-32-characters-long",
         )
+
+
+def test_foreign_key_blocks_orphan_daily_aggregate() -> None:
+    with Session(get_engine()) as db:
+        db.add(DailyClick(link_id=999999999, day=datetime.now(UTC).date(), clicks=1))
+        with pytest.raises(IntegrityError):
+            db.commit()
+        db.rollback()
+
+
+def test_concurrent_custom_alias_writes(client: TestClient, auth: dict[str, str]) -> None:
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        results = list(
+            pool.map(
+                lambda _: create(client, auth, alias="samecode").status_code,
+                range(6),
+            )
+        )
+    assert sorted(results) == [201, 409, 409, 409, 409, 409]
+    assert client.get("/api/v1/links", headers=auth).json()["total"] == 1
+
+
+def test_database_errors_do_not_expose_details(auth: dict[str, str]) -> None:
+    class BrokenSession:
+        def add(self, _: object) -> None:
+            raise RuntimeError("sensitive-database-diagnostic")
+
+    def bad_dependency():
+        yield BrokenSession()
+
+    app.dependency_overrides[get_session] = bad_dependency
+    with TestClient(app, raise_server_exceptions=False) as client:
+        response = client.post(
+            "/api/v1/links",
+            headers=auth,
+            json={"target_url": "https://example.org/"},
+        )
+    assert response.status_code == 500
+    assert "sensitive-database-diagnostic" not in response.text

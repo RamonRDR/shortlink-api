@@ -50,12 +50,12 @@ def increment_and_track(session: Session, code: str, now: datetime) -> str | Non
         session.rollback()
         return None
     link_id, target_url = result
-    statement = insert(DailyClick).values(link_id=link_id, day=now.date(), clicks=1)
-    statement = statement.on_conflict_do_update(
+    insert_stmt = insert(DailyClick).values(link_id=link_id, day=now.date(), clicks=1)
+    insert_stmt = insert_stmt.on_conflict_do_update(
         constraint="uq_daily_clicks_link_day",
         set_={"clicks": DailyClick.clicks + 1},
     )
-    session.execute(statement)
+    session.execute(insert_stmt)
     session.commit()
     return str(target_url)
 
