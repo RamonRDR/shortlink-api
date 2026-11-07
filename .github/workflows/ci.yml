@@ -18,7 +18,7 @@ jobs:
     name: Quality and packaging
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: '3.14'
@@ -56,7 +56,7 @@ jobs:
       SHORTLINK_ADMIN_API_KEY: ci-only-example-key-please-never-use-in-production
       SHORTLINK_BASE_URL: http://localhost:8000
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: '3.14'
@@ -74,6 +74,6 @@ jobs:
     name: Docker build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build image without publishing
         run: docker build .

@@ -24,6 +24,6 @@ services:
       SHORTLINK_ADMIN_API_KEY: "${SHORTLINK_ADMIN_API_KEY:?Set SHORTLINK_ADMIN_API_KEY in .env}"
       SHORTLINK_BASE_URL: "${SHORTLINK_BASE_URL:-http://localhost:8000}"
       SHORTLINK_MAX_REQUESTS_PER_MINUTE: "${SHORTLINK_MAX_REQUESTS_PER_MINUTE:-60}"
-    command: ["sh", "-c", "alembic upgrade head && uvicorn shortlink.main:app --host 0.0.0.0 --port 8000"]
+    command: ["sh", "-c", "alembic upgrade head && uvicorn shortlink.main:app --host 0.0.0.0 --port 8000 --no-access-log"]
 volumes:
   postgres_data:

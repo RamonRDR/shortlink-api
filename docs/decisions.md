@@ -38,3 +38,8 @@ administrative reports. No scheduled retention/cleanup task is provided.
 PostgreSQL is the sole persistence layer. Docker Compose is for local work;
 CI uses an ephemeral PostgreSQL service. No production deployment, anonymous
 signup, automated publication, Redis or queue is included.
+
+## 007: Privacy-conscious server logs
+The default Compose/Docker invocation disables Uvicorn HTTP access logs,
+which otherwise include client IP addresses. Keep access logs disabled or
+redacted in production and configure the reverse proxy accordingly.

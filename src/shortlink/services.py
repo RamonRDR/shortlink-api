@@ -1,16 +1,15 @@
-"""Business operations with database-enforced uniqueness and atomic click counts."""
+"""Business rules for code allocation and lifecycle, separate from database queries."""
 
 import secrets
 import string
 from datetime import UTC, datetime
 
 from fastapi import HTTPException
-from sqlalchemy import func, select, update
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from shortlink.models import DailyClick, Link
+from shortlink import repositories
+from shortlink.models import Link
 from shortlink.schemas import LinkCreate, LinkRead, LinkUpdate
 
 ALPHABET = string.ascii_letters + string.digits
@@ -22,7 +21,7 @@ def generate_code(length: int = 7) -> str:
 
 
 def get_link(session: Session, code: str) -> Link:
-    link = session.scalar(select(Link).where(Link.code == code, Link.deleted_at.is_(None)))
+    link = repositories.find_link(session, code)
     if link is None:
         raise HTTPException(status_code=404, detail="Link not found")
     return link
@@ -50,11 +49,8 @@ def create_link(session: Session, payload: LinkCreate) -> Link:
             target_url=str(payload.target_url),
             expires_at=payload.expires_at,
         )
-        session.add(link)
         try:
-            session.commit()
-            session.refresh(link)
-            return link
+            return repositories.persist_new(session, link)
         except IntegrityError:
             session.rollback()
             if payload.alias:
@@ -66,57 +62,21 @@ def update_link(session: Session, link: Link, payload: LinkUpdate) -> Link:
     changes = payload.model_dump(exclude_unset=True)
     for name, value in changes.items():
         setattr(link, name, value)
-    session.commit()
-    session.refresh(link)
-    return link
+    return repositories.persist_existing(session, link)
 
 
 def delete_link(session: Session, link: Link) -> None:
-    link.deleted_at = datetime.now(UTC)
-    link.is_active = False
-    session.commit()
+    repositories.soft_delete(session, link, datetime.now(UTC))
 
 
 def record_redirect(session: Session, code: str) -> str:
-    """Lock the link row through UPDATE, then atomically upsert the daily counter."""
-    now = datetime.now(UTC)
-    stmt = (
-        update(Link)
-        .where(
-            Link.code == code,
-            Link.deleted_at.is_(None),
-            Link.is_active.is_(True),
-            (Link.expires_at.is_(None) | (Link.expires_at > now)),
-        )
-        .values(click_count=Link.click_count + 1, last_accessed_at=now)
-        .returning(Link.id, Link.target_url)
-    )
-    result = session.execute(stmt).one_or_none()
-    if result is None:
-        session.rollback()
+    target = repositories.increment_and_track(session, code, datetime.now(UTC))
+    if target is None:
         raise HTTPException(status_code=404, detail="Link not found")
-    link_id, target_url = result
-    day = now.date()
-    statement = insert(DailyClick).values(link_id=link_id, day=day, clicks=1)
-    statement = statement.on_conflict_do_update(
-        constraint="uq_daily_clicks_link_day",
-        set_={"clicks": DailyClick.clicks + 1},
-    )
-    session.execute(statement)
-    session.commit()
-    return str(target_url)
+    return target
 
 
 def list_links(
     session: Session, limit: int, offset: int, active: bool | None
 ) -> tuple[list[Link], int]:
-    query = select(Link).where(Link.deleted_at.is_(None))
-    if active is not None:
-        query = query.where(Link.is_active == active)
-    total = session.scalar(select(func.count()).select_from(query.subquery())) or 0
-    items = list(
-        session.scalars(
-            query.order_by(Link.created_at.desc(), Link.id.desc()).limit(limit).offset(offset)
-        )
-    )
-    return items, total
+    return repositories.page(session, limit, offset, active)

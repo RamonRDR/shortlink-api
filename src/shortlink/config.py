@@ -14,6 +14,13 @@ class Settings(BaseSettings):
     base_url: HttpUrl = HttpUrl("http://localhost:8000/")
     max_requests_per_minute: int = Field(default=60, ge=1, le=10000)
 
+    @field_validator("admin_api_key")
+    @classmethod
+    def reject_placeholder(cls, value: str) -> str:
+        if value.startswith("replace-with-"):
+            raise ValueError("Replace the example API key before starting the server")
+        return value
+
     @field_validator("database_url")
     @classmethod
     def postgres_only(cls, value: str) -> str:

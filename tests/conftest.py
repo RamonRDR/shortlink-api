@@ -5,6 +5,7 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import delete
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
 from shortlink.config import get_settings
@@ -17,9 +18,9 @@ from shortlink.rate_limit import limiter
 @pytest.fixture(autouse=True)
 def clean_database() -> Iterator[None]:
     # Explicit guard to prevent accidentally clearing a production database.
-    url = get_settings().database_url.lower()
-    if not any(marker in url for marker in ("test", "localhost", "127.0.0.1")):
-        raise RuntimeError("Tests require a disposable database URL containing test or localhost")
+    database = make_url(get_settings().database_url).database or ""
+    if not database.endswith("_test"):
+        raise RuntimeError("Tests require a disposable database named with the _test suffix")
     with Session(get_engine()) as db:
         db.execute(delete(DailyClick))
         db.execute(delete(Link))
