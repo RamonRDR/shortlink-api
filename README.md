@@ -91,8 +91,9 @@ Windows PowerShell activation: .venv\Scripts\Activate.ps1.
 
 ## Endpoint reference
 
-Only `GET /{code}` and `GET /health` are public. All other endpoints require
-the `X-API-Key` request header.
+Public routes include `GET /{code}`, `GET /health`, `GET /docs`, and
+`GET /openapi.json`. Link-management and analytics endpoints under
+`/api/v1` require the `X-API-Key` request header.
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |

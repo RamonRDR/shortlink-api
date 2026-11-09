@@ -89,8 +89,9 @@ No PowerShell, a ativação é .venv\Scripts\Activate.ps1.
 
 ## Referência dos endpoints
 
-Somente `GET /{code}` e `GET /health` são públicos. Os demais endpoints exigem
-o cabeçalho `X-API-Key`.
+As rotas públicas incluem `GET /{code}`, `GET /health`, `GET /docs` e
+`GET /openapi.json`. As rotas de administração e analytics sob
+`/api/v1` exigem o cabeçalho `X-API-Key`.
 
 | Método | Endpoint | Finalidade |
 | --- | --- | --- |

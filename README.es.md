@@ -89,8 +89,9 @@ En PowerShell use .venv\Scripts\Activate.ps1.
 
 ## Referencia de endpoints
 
-Solo `GET /{code}` y `GET /health` son públicos. Los demás endpoints
-requieren el encabezado `X-API-Key`.
+Las rutas públicas incluyen `GET /{code}`, `GET /health`, `GET /docs` y
+`GET /openapi.json`. Las rutas de administración y análisis de
+`/api/v1` requieren el encabezado `X-API-Key`.
 
 | Método | Endpoint | Propósito |
 | --- | --- | --- |
