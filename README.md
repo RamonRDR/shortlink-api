@@ -1,12 +1,17 @@
 # ShortLink API
 
+**English (primary)** | [Português (Brasil)](README.pt-BR.md) | [Español](README.es.md)
+
 [![CI](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml/badge.svg)](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml)
 
-A security-conscious REST URL shortener built with Python 3.14, FastAPI,
-SQLAlchemy and PostgreSQL. This is a portfolio project illustrating API design,
-data integrity, concurrency, testing, automation and secure defaults.
+A security-conscious REST URL shortener built with **Python 3.14, FastAPI,
+SQLAlchemy, Alembic, and PostgreSQL**. Designed as a backend portfolio project
+to demonstrate REST API design, transactional data integrity, concurrent
+requests, automated testing, and security-minded engineering.
 
-**Language:** English | [Português](README.pt-BR.md) | [Español](README.es.md)
+**Audience:** backend, Python, automation, and software engineering recruiters.
+This `README.md` is the canonical documentation; the Portuguese and Spanish
+versions mirror the same features, limitations, and setup instructions.
 
 ## Features
 
@@ -18,6 +23,20 @@ data integrity, concurrency, testing, automation and secure defaults.
 - Strict HTTP/HTTPS URL validation; private IP targets and credentials rejected.
 - OpenAPI documentation at /docs and database readiness at /health.
 - Alembic migrations, PostgreSQL integration tests, and GitHub Actions CI.
+
+## Project structure
+
+| Path | Responsibility |
+| --- | --- |
+| `src/shortlink/main.py` | Routes, dependency injection, and HTTP responses |
+| `src/shortlink/schemas.py` | Validated request and response contracts |
+| `src/shortlink/services.py` | Short-code and link lifecycle business rules |
+| `src/shortlink/repositories.py` | SQLAlchemy queries and atomic redirect updates |
+| `src/shortlink/analytics.py` | Aggregated reporting |
+| `src/shortlink/security.py`, `rate_limit.py` | Admin authentication and request limits |
+| `migrations/` | Database schema versioning with Alembic |
+| `tests/` | Automated tests against a disposable PostgreSQL database |
+| `.github/workflows/ci.yml` | GitHub Actions quality and integration checks |
 
 ## Architecture
 
@@ -69,6 +88,24 @@ Start PostgreSQL and configure these environment variables:
     uvicorn shortlink.main:app --reload
 
 Windows PowerShell activation: .venv\Scripts\Activate.ps1.
+
+## Endpoint reference
+
+Only `GET /{code}` and `GET /health` are public. All other endpoints require
+the `X-API-Key` request header.
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/v1/links` | Create a short link or custom alias |
+| `GET` | `/api/v1/links` | List links with `limit`, `offset`, and optional `active` filter |
+| `GET` | `/api/v1/links/{code}` | Get administrative link details |
+| `PATCH` | `/api/v1/links/{code}` | Update active status or expiry |
+| `DELETE` | `/api/v1/links/{code}` | Soft-delete a link (`204`) |
+| `GET` | `/api/v1/links/{code}/analytics` | Click totals and UTC daily history (`days`) |
+| `GET` | `/api/v1/analytics` | Total links, clicks, and popular links (`top`) |
+| `GET` | `/{code}` | Public HTTP `302` redirect when valid |
+| `GET` | `/health` | Database health check |
+| `GET` | `/docs` | Interactive OpenAPI documentation |
 
 ## API requests and responses
 
@@ -129,9 +166,11 @@ return 429 with Retry-After.
 
 Metrics record total redirect responses prepared by the server, UTC calendar
 day counts and last access timestamp. They do not confirm that the destination
-loaded successfully. No complete IP addresses, user agents or referrers are
-stored. A database transaction guarantees aggregate consistency when concurrent
-requests redirect through the same code.
+loaded successfully. No IP addresses, user agents, or referrers are
+stored by the application. Default Docker/Compose commands disable Uvicorn HTTP
+access logs; a reverse proxy or hosting platform may still log requests and
+must be configured separately. A PostgreSQL transaction keeps aggregate counters
+consistent under concurrent redirects.
 
 ## Testing and GitHub Actions
 
@@ -145,10 +184,10 @@ With a dedicated test database (its name must end in _test) and configured envir
     python -m build --wheel
     docker build .
 
-GitHub Actions runs lint, format, types, migration and isolated PostgreSQL
-integration tests, packaging and image build on pull requests targeting main
-and pushes to main. GitHub-hosted runners only, no production credentials,
-auto-deploy or publishing.
+GitHub Actions runs Ruff lint/format, mypy, Alembic migration and drift checks,
+PostgreSQL integration tests, Python wheel packaging, and Docker image build
+on pull requests targeting `main` and pushes to `main`. Workflows use hosted
+runners and temporary test credentials; they **do not deploy or publish**.
 
 ## Security and known limitations
 
@@ -159,8 +198,8 @@ not verify domain reputation or guarantee that trusted-looking URLs are safe.
 A public anonymous link shortener needs additional anti-abuse controls.
 
 One shared administrator key, process-local rate limiting, no distributed
-tracing exporter, no link retention job, no user accounts, no IP-based unique
-visitor analytics and no automatic deployment. Deleted codes remain reserved.
+tracing exporter, no scheduled retention job, no user accounts, no unique
+visitor tracking, and no automatic deployment. Deleted codes remain reserved.
 See [architecture decisions](docs/decisions.md).
 
 ## License

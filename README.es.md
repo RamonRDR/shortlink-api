@@ -1,12 +1,16 @@
 # ShortLink API
 
+[English (documentación principal)](README.md) | [Português (Brasil)](README.pt-BR.md) | **Español**
+
 [![CI](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml/badge.svg)](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml)
 
-Acortador de URL con API REST, Python 3.14, FastAPI, SQLAlchemy y PostgreSQL.
-Proyecto de portafolio que demuestra integridad de datos, seguridad,
-concurrencia, pruebas de integración y automatización.
+Acortador de URL con API REST, **Python 3.14, FastAPI, SQLAlchemy, Alembic y
+PostgreSQL**. Proyecto de portafolio backend que demuestra diseño de API,
+integridad transaccional, concurrencia, pruebas automatizadas y seguridad.
 
-**Idioma:** [English](README.md) | [Português](README.pt-BR.md) | Español
+**Público objetivo:** reclutadores de backend, Python, automatización e ingeniería
+de software. El `README.md` en inglés es la documentación principal; esta
+versión mantiene los mismos recursos, limitaciones e instrucciones de ejecución.
 
 ## Funcionalidades
 
@@ -18,6 +22,20 @@ concurrencia, pruebas de integración y automatización.
 - Limitar solicitudes administrativas por proceso y validar URL HTTP/HTTPS.
 - Documentación OpenAPI en /docs y estado de base de datos en /health.
 - Migraciones Alembic, pruebas PostgreSQL y CI con GitHub Actions.
+
+## Estructura del proyecto
+
+| Ruta | Responsabilidad |
+| --- | --- |
+| `src/shortlink/main.py` | Rutas, inyección de dependencias y respuestas HTTP |
+| `src/shortlink/schemas.py` | Contratos validados de entrada y salida |
+| `src/shortlink/services.py` | Reglas de negocio y ciclo de vida de enlaces |
+| `src/shortlink/repositories.py` | Consultas SQLAlchemy y actualizaciones atómicas |
+| `src/shortlink/analytics.py` | Informes agregados |
+| `src/shortlink/security.py`, `rate_limit.py` | Autenticación administrativa y límite de solicitudes |
+| `migrations/` | Control de versiones del esquema con Alembic |
+| `tests/` | Pruebas con una base de datos PostgreSQL desechable |
+| `.github/workflows/ci.yml` | Validaciones automáticas de GitHub Actions |
 
 ## Arquitectura
 
@@ -69,6 +87,24 @@ Configure PostgreSQL y estas variables:
 
 En PowerShell use .venv\Scripts\Activate.ps1.
 
+## Referencia de endpoints
+
+Solo `GET /{code}` y `GET /health` son públicos. Los demás endpoints
+requieren el encabezado `X-API-Key`.
+
+| Método | Endpoint | Propósito |
+| --- | --- | --- |
+| `POST` | `/api/v1/links` | Crear enlace corto o alias personalizado |
+| `GET` | `/api/v1/links` | Listar con `limit`, `offset` y filtro opcional `active` |
+| `GET` | `/api/v1/links/{code}` | Consultar detalles administrativos |
+| `PATCH` | `/api/v1/links/{code}` | Modificar estado activo o vencimiento |
+| `DELETE` | `/api/v1/links/{code}` | Eliminar lógicamente un enlace (`204`) |
+| `GET` | `/api/v1/links/{code}/analytics` | Total e historial diario UTC (`days`) |
+| `GET` | `/api/v1/analytics` | Totales de enlaces, clics y enlaces populares (`top`) |
+| `GET` | `/{code}` | Redirección pública HTTP `302` |
+| `GET` | `/health` | Verificar disponibilidad de la base de datos |
+| `GET` | `/docs` | Documentación OpenAPI interactiva |
+
 ## Ejemplos de solicitudes y respuestas
 
 Sustituya YOUR_ADMIN_KEY por su secreto configurado.
@@ -118,9 +154,11 @@ demasiadas solicitudes devuelven 429 con Retry-After.
 ## Analytics y privacidad
 
 Los conteos reflejan respuestas de redirección preparadas, no visitas
-completadas en el destino. Los días utilizan UTC. No se almacenan direcciones
-IP completas, agentes de usuario ni referentes. Las transacciones de
-PostgreSQL mantienen los totales consistentes ante solicitudes simultáneas.
+completadas en el destino. Los días utilizan UTC. La aplicación no almacena direcciones
+IP, agentes de usuario ni referentes. Docker y Compose desactivan por defecto
+los registros de acceso HTTP de Uvicorn, pero los proxies y proveedores de
+hosting pueden generar sus propios registros. Las transacciones PostgreSQL
+mantienen los totales consistentes ante solicitudes simultáneas.
 
 ## Pruebas y GitHub Actions
 
@@ -134,9 +172,11 @@ Con una base de datos de prueba aislada (nombre terminado en _test) y variables 
     python -m build --wheel
     docker build .
 
-GitHub Actions ejecuta lint, formato, tipos, migraciones, pruebas
-PostgreSQL, empaquetado y construcción Docker para PR y pushes a main.
-No hay despliegue automático ni publicación de paquetes.
+GitHub Actions ejecuta Ruff lint/format, mypy, migraciones y comprobación
+de cambios pendientes del esquema Alembic, pruebas PostgreSQL, construcción
+del wheel Python y de la imagen Docker en PR dirigidos a `main` y pushes
+a `main`. Usa runners hospedados y credenciales de prueba, sin desplegar
+ni publicar artefactos.
 
 ## Seguridad y limitaciones
 
@@ -147,8 +187,8 @@ contra phishing. No use el proyecto para registro público anónimo sin
 controles adicionales.
 
 Limitaciones: única clave administrativa; rate limiting en memoria por
-proceso; sin visitantes únicos, limpieza programada, tracing externo ni
-despliegue. Los alias eliminados siguen reservados. Lea
+proceso y no distribuido; sin seguimiento de visitantes únicos, limpieza
+programada, tracing externo ni despliegue automático. Los alias eliminados siguen reservados. Lea
 [decisiones técnicas](docs/decisions.md).
 
 ## Licencia
