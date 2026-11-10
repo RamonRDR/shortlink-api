@@ -6,7 +6,7 @@
 
 [🇺🇸 English](README.md) · [🇧🇷 Português](README.pt-BR.md) · [🇪🇸 Español](README.es.md)
 
-[![CI](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml/badge.svg?event=pull_request)](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml)
+[![CI](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml/badge.svg)](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml)
 [![Python 3.14](https://img.shields.io/badge/Python-3.14-blue)](https://www.python.org/)
 [![MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -19,7 +19,7 @@
 
 </div>
 
-> **Status do projeto:** Implementado e revisado pelo Codex. Todos os apontamentos resolvidos, 39 testes automatizados aprovados e os três jobs do GitHub Actions aprovados no PR atual. O [PR #1](https://github.com/RamonRDR/shortlink-api/pull/1) está aberto, aguardando autorização para integrar à `main`. Sem deploy ou publicação.
+> **Status do projeto:** Implementado, revisado pelo Codex e integrado à `main` pelo [PR #1](https://github.com/RamonRDR/shortlink-api/pull/1). Todos os apontamentos resolvidos. Os checks de PR no GitHub Actions passaram (39 testes, qualidade/empacotamento, PostgreSQL e Docker Compose). Sem deploy ou publicação.
 
 Encurtador de URLs com API REST, **Python 3.14, FastAPI, SQLAlchemy, Alembic e
 PostgreSQL**. Projeto de portfólio backend que demonstra design de APIs,
