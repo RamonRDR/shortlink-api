@@ -1,16 +1,33 @@
-# ShortLink API
+<div align="center">
 
-[English (versão principal)](README.md) | **Português (Brasil)** | [Español](README.es.md)
+# ShortLink API 🔗
 
-[![CI](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml/badge.svg)](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml)
+**Encurte links com segurança. Meça cada redirecionamento. Mantenha o controle.**
+
+[🇺🇸 English](README.md) · [🇧🇷 Português](README.pt-BR.md) · [🇪🇸 Español](README.es.md)
+
+[![CI](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml/badge.svg?event=pull_request)](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml)
+[![Python 3.14](https://img.shields.io/badge/Python-3.14-blue)](https://www.python.org/)
+[![MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+![FastAPI](https://img.shields.io/badge/FastAPI-0.116%2B-009688)
+![Pydantic v2](https://img.shields.io/badge/Pydantic-v2-E92063)
+![SQLAlchemy 2](https://img.shields.io/badge/SQLAlchemy-2-red)
+![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-336791)
+![Alembic](https://img.shields.io/badge/Alembic-migrations-555555)
+![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED)
+
+</div>
+
+> **Status do projeto:** Implementado e revisado pelo Codex. Todos os apontamentos resolvidos, 39 testes automatizados aprovados e os três jobs do GitHub Actions aprovados no PR atual. O [PR #1](https://github.com/RamonRDR/shortlink-api/pull/1) está aberto, aguardando autorização para integrar à `main`. Sem deploy ou publicação.
 
 Encurtador de URLs com API REST, **Python 3.14, FastAPI, SQLAlchemy, Alembic e
-PostgreSQL**. Projeto de portfólio backend que demonstra design de APIs, integridade
-transacional, concorrência, testes automatizados e práticas de segurança.
+PostgreSQL**. Projeto de portfólio backend que demonstra design de APIs,
+integridade transacional, concorrência, testes automatizados e segurança.
 
 **Público-alvo:** recrutadores de backend, Python, automação e engenharia de software.
-O `README.md` em inglês é a documentação principal; esta versão mantém
-equivalência de recursos, limitações e instruções de execução.
+O `README.md` em inglês é a documentação principal; as versões traduzidas
+mantêm recursos, instruções e limitações equivalentes.
 
 ## Funcionalidades
 
@@ -22,6 +39,10 @@ equivalência de recursos, limitações e instruções de execução.
 - Limitar requisições administrativas por processo e validar URLs HTTP/HTTPS.
 - Documentação OpenAPI em /docs; verificação do banco em /health.
 - Migrações Alembic, testes PostgreSQL e CI com GitHub Actions.
+
+## Tecnologias utilizadas
+
+Python **3.14**, FastAPI, Pydantic v2 e Pydantic Settings para contratos HTTP e configuração tipada; SQLAlchemy **2**, psycopg **3**, PostgreSQL **16** e Alembic para persistência e migrações; Uvicorn para execução da API e Docker Compose para orquestração local. O GitHub Actions executa pytest, Ruff, mypy, empacotamento wheel, verificação de migrações e um teste de inicialização do Compose.
 
 ## Estrutura do projeto
 
