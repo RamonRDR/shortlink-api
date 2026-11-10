@@ -6,7 +6,7 @@
 
 [🇺🇸 English](README.md) · [🇧🇷 Português](README.pt-BR.md) · [🇪🇸 Español](README.es.md)
 
-[![CI](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml/badge.svg?event=pull_request)](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml)
+[![CI](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml/badge.svg)](https://github.com/RamonRDR/shortlink-api/actions/workflows/ci.yml)
 [![Python 3.14](https://img.shields.io/badge/Python-3.14-blue)](https://www.python.org/)
 [![MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -19,7 +19,7 @@
 
 </div>
 
-> **Project status:** Implemented and reviewed by Codex. All reported findings resolved, 39 automated tests passed, and all three GitHub Actions jobs passed on the current PR. [PR #1](https://github.com/RamonRDR/shortlink-api/pull/1) is open, awaiting owner approval to merge into `main`. Not deployed or published.
+> **Project status:** Implemented, independently reviewed by Codex, and integrated into `main` via [PR #1](https://github.com/RamonRDR/shortlink-api/pull/1). All Codex findings resolved. GitHub Actions PR checks passed (39 tests, quality/packaging, PostgreSQL integration, and Docker Compose smoke test). No deployment or package publication.
 
 A security-conscious REST URL shortener built with **Python 3.14, FastAPI,
 SQLAlchemy, Alembic, and PostgreSQL**. Designed as a backend portfolio project
