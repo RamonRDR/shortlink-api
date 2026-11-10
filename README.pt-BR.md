@@ -17,6 +17,12 @@
 ![Alembic](https://img.shields.io/badge/Alembic-migrations-555555)
 ![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED)
 
+![pytest](https://img.shields.io/badge/pytest-39%20passing-0A9EDC)
+![Ruff](https://img.shields.io/badge/Ruff-lint%20%26%20format-D7FF64)
+![mypy](https://img.shields.io/badge/mypy-type%20checked-2A6DB4)
+![OpenAPI](https://img.shields.io/badge/OpenAPI-documented-6BA539)
+![psycopg 3](https://img.shields.io/badge/psycopg-3-4169E1)
+
 </div>
 
 > **Status do projeto:** Implementado, revisado pelo Codex e integrado à `main` pelo [PR #1](https://github.com/RamonRDR/shortlink-api/pull/1). Todos os apontamentos resolvidos. Os checks de PR no GitHub Actions passaram (39 testes, qualidade/empacotamento, PostgreSQL e Docker Compose). Sem deploy ou publicação.
