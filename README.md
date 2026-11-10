@@ -16,6 +16,8 @@
 ![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-336791)
 ![Alembic](https://img.shields.io/badge/Alembic-migrations-555555)
 ![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED)
+![Uvicorn](https://img.shields.io/badge/Uvicorn-ASGI-4051B5)
+![Pydantic Settings](https://img.shields.io/badge/Pydantic-Settings-B72867)
 
 ![pytest](https://img.shields.io/badge/pytest-39%20passing-0A9EDC)
 ![Ruff](https://img.shields.io/badge/Ruff-lint%20%26%20format-D7FF64)
@@ -225,6 +227,20 @@ GitHub Actions runs Ruff lint/format, mypy, Alembic migration and drift checks,
 PostgreSQL integration tests, Python wheel packaging, and a Docker Compose startup/health smoke test
 on pull requests targeting `main` and pushes to `main`. Workflows use hosted
 runners and temporary test credentials; they **do not deploy or publish**.
+
+**Badge evidence and maintenance:** The `pytest 39 passing` badge is a static
+snapshot of [GitHub Actions run #42731945341](https://github.com/RamonRDR/shortlink-api/actions/runs/42731945341)
+on `main` (`39 passed, 1 warning`). After adding, removing, or parametrizing
+tests, inspect the completed `PostgreSQL integration / Test` job on `main`
+and update the same count in **all three READMEs** in a reviewed PR. A CI badge
+tracks the workflow dynamically, but the pytest count does not auto-update.
+The warning above was a non-failing third-party deprecation warning.
+
+**Version accuracy:** The CI runtime uses Python 3.14 and a PostgreSQL 16
+service. `FastAPI 0.116+` denotes the declared minimum (`>=0.116,<1`),
+not a pinned or observed release; dependency ranges in `pyproject.toml`
+determine what can be installed. Uvicorn and Pydantic Settings badges
+intentionally omit an exact version because neither is pinned.
 
 ## Security and known limitations
 

@@ -16,6 +16,8 @@
 ![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-336791)
 ![Alembic](https://img.shields.io/badge/Alembic-migrations-555555)
 ![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED)
+![Uvicorn](https://img.shields.io/badge/Uvicorn-ASGI-4051B5)
+![Pydantic Settings](https://img.shields.io/badge/Pydantic-Settings-B72867)
 
 ![pytest](https://img.shields.io/badge/pytest-39%20passing-0A9EDC)
 ![Ruff](https://img.shields.io/badge/Ruff-lint%20%26%20format-D7FF64)
@@ -214,6 +216,21 @@ de cambios pendientes del esquema Alembic, pruebas PostgreSQL, construcción
 del wheel Python y de arranque/health de Docker Compose en PR dirigidos a `main` y pushes
 a `main`. Usa runners hospedados y credenciales de prueba, sin desplegar
 ni publicar artefactos.
+
+**Evidencia y mantenimiento de los badges:** `pytest 39 passing` representa
+un resultado estático confirmado en la [ejecución #42731945341 de GitHub Actions](https://github.com/RamonRDR/shortlink-api/actions/runs/42731945341)
+en `main` (`39 passed, 1 warning`). Al añadir, eliminar o parametrizar
+pruebas, consulte el job completado `PostgreSQL integration / Test` en
+`main` y actualice la cifra en **los tres READMEs** mediante un PR revisado.
+El badge CI refleja el workflow dinámicamente; el recuento de pytest
+no se actualiza automáticamente. El aviso corresponde a una deprecación
+de un tercero y no a un fallo de pruebas.
+
+**Precisión de versiones:** El CI utiliza Python 3.14 y PostgreSQL 16.
+El badge `FastAPI 0.116+` indica la versión mínima declarada
+(`>=0.116,<1`), no una versión fijada ni observada. Los intervalos de
+`pyproject.toml` determinan las versiones compatibles. Uvicorn y
+Pydantic Settings no muestran una versión exacta porque no están fijadas.
 
 ## Seguridad y limitaciones
 
