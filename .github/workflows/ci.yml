@@ -71,9 +71,25 @@ jobs:
         run: pytest -q
 
   docker:
-    name: Docker build
+    name: Docker Compose smoke test
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_PASSWORD: 'ci@password:with/special?#chars'
+      SHORTLINK_ADMIN_API_KEY: 'ci-only-example-key-please-never-use-in-production'
     steps:
       - uses: actions/checkout@v5
-      - name: Build image without publishing
-        run: docker build .
+      - name: Build and start with reserved password characters
+        run: docker compose up --build -d
+      - name: Check API health
+        run: |
+          for attempt in $(seq 1 40); do
+            if curl --fail --silent http://localhost:8000/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose logs --no-color app
+          exit 1
+      - name: Shut down disposable containers
+        if: always()
+        run: docker compose down --volumes --remove-orphans

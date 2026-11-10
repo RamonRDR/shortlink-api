@@ -2,14 +2,17 @@
 
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
+from threading import Event
 from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select, text
+from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from shortlink import repositories
 from shortlink.config import Settings, get_settings
 from shortlink.db import get_engine, get_session
 from shortlink.main import app
@@ -206,7 +209,7 @@ def test_db_integrity_constraint(client: TestClient, auth: dict[str, str]) -> No
 def test_migrations_applied() -> None:
     with Session(get_engine()) as db:
         version = db.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
-    assert version == "0001_initial"
+    assert version == "0002_daily_id_bigint"
 
 
 def test_health_handles_database_error(client: TestClient) -> None:
@@ -285,3 +288,96 @@ def test_database_errors_do_not_expose_details(auth: dict[str, str]) -> None:
         )
     assert response.status_code == 500
     assert "sensitive-database-diagnostic" not in response.text
+
+
+def test_compose_password_is_url_encoded() -> None:
+    """Reserved URL characters remain part of the PostgreSQL password."""
+    password = "a@strong:password/with?#special"
+    settings = Settings(
+        database_url="",
+        db_password=password,
+        admin_api_key="a" * 32,
+        _env_file=None,
+    )
+    parsed = make_url(settings.database_url)
+    assert parsed.password == password
+    assert parsed.host == "db"
+    assert parsed.database == "shortlink"
+    assert parsed.drivername == "postgresql+psycopg"
+
+
+def test_database_configuration_requires_password_or_dsn() -> None:
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        Settings(database_url="", db_password=None, admin_api_key="a" * 32, _env_file=None)
+
+
+def test_non_ascii_configured_key_is_rejected() -> None:
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        Settings(
+            database_url="postgresql+psycopg://shortlink:password@localhost:5432/shortlink_test",
+            admin_api_key="a" * 31 + "é",
+            _env_file=None,
+        )
+
+
+def test_non_ascii_key_header_returns_401(client: TestClient) -> None:
+    response = client.get("/api/v1/links", headers={b"x-api-key": b"a" * 31 + b"\xe9"})
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid API key"
+
+
+def test_delayed_redirect_cannot_overwrite_newer_timestamp(
+    client: TestClient, auth: dict[str, str]
+) -> None:
+    assert create(client, auth, alias="timestamp-order").status_code == 201
+    earlier = datetime.now(UTC) - timedelta(minutes=2)
+    later = datetime.now(UTC) - timedelta(minutes=1)
+    recorded_earlier = Event()
+    let_earlier_commit = Event()
+
+    def delayed_write() -> str | None:
+        recorded_earlier.set()
+        assert let_earlier_commit.wait(timeout=10)
+        with Session(get_engine()) as db:
+            return repositories.increment_and_track(db, "timestamp-order", earlier)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        old_future = pool.submit(delayed_write)
+        assert recorded_earlier.wait(timeout=10)
+        try:
+            with Session(get_engine()) as db:
+                assert repositories.increment_and_track(db, "timestamp-order", later)
+        finally:
+            let_earlier_commit.set()
+        assert old_future.result(timeout=10)
+
+    with Session(get_engine()) as db:
+        link = db.scalar(select(Link).where(Link.code == "timestamp-order"))
+        assert link is not None
+        assert link.last_accessed_at == later
+        assert link.click_count == 2
+        assert db.scalar(select(DailyClick.clicks).where(DailyClick.link_id == link.id)) == 2
+
+
+def test_daily_aggregate_id_and_sequence_are_bigint() -> None:
+    with Session(get_engine()) as db:
+        column_type = db.scalar(
+            text(
+                "SELECT data_type FROM information_schema.columns "
+                "WHERE table_schema = current_schema() "
+                "AND table_name = 'daily_clicks' AND column_name = 'id'"
+            )
+        )
+        sequence_type = db.scalar(
+            text(
+                "SELECT data_type FROM pg_sequences "
+                "WHERE schemaname = current_schema() "
+                "AND sequencename = 'daily_clicks_id_seq'"
+            )
+        )
+    assert column_type == "bigint"
+    assert sequence_type == "bigint"

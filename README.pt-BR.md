@@ -65,8 +65,11 @@ Requisitos: Python **3.14**, PostgreSQL **16** ou Docker com Compose.
     docker compose up --build -d
     curl http://localhost:8000/health
 
-O Compose aguarda o banco e executa migrações automaticamente. Não use
-credenciais de exemplo em produção. O arquivo .env está ignorado pelo Git.
+O Compose aguarda o banco e executa migrações automaticamente. A senha
+`POSTGRES_PASSWORD` é enviada separadamente para a aplicação, que realiza
+a codificação percentual na URL do PostgreSQL. Caracteres como `@`, `:`,
+`/`, `?` e `#` são aceitos. Não use credenciais de exemplo em produção.
+O arquivo .env está ignorado pelo Git.
 
 **Execução local:**
 
@@ -75,9 +78,15 @@ Configure PostgreSQL e as variáveis:
 | Variável | Descrição |
 | --- | --- |
 | SHORTLINK_DATABASE_URL | postgresql+psycopg://usuario:senha@localhost:5432/shortlink |
-| SHORTLINK_ADMIN_API_KEY | Segredo aleatório, mínimo de 32 caracteres |
+| SHORTLINK_ADMIN_API_KEY | Segredo ASCII aleatório, mínimo de 32 caracteres |
 | SHORTLINK_BASE_URL | URL pública, por exemplo http://localhost:8000 |
 | SHORTLINK_MAX_REQUESTS_PER_MINUTE | Limite administrativo por processo; padrão 60 |
+
+Se configurar `SHORTLINK_DATABASE_URL` manualmente, codifique os caracteres
+especiais da senha em formato percentual. Outra opção é usar
+`SHORTLINK_DB_PASSWORD` com `SHORTLINK_DB_HOST`, `SHORTLINK_DB_PORT`,
+`SHORTLINK_DB_USER` e `SHORTLINK_DB_NAME` (padrões: `db`, `5432`,
+`shortlink`, `shortlink`). A API key deve conter apenas caracteres ASCII.
 
     python3.14 -m venv .venv
     . .venv/bin/activate
@@ -175,7 +184,7 @@ Com banco de testes isolado (nome terminado em _test) e variáveis configuradas:
 
 O GitHub Actions executa Ruff lint/format, mypy, migrações e verificação de
 drift do Alembic, testes de integração PostgreSQL, build de wheel Python e
-imagem Docker em PRs direcionados à `main` e pushes na `main`. São usados
+teste de inicialização e health do Docker Compose em PRs direcionados à `main` e pushes na `main`. São usados
 runners hospedados e credenciais temporárias, sem deploy ou publicação.
 
 ## Segurança e limitações

@@ -37,7 +37,7 @@ class Settings(BaseSettings):
         return value
 
     @model_validator(mode="after")
-    def resolve_database_url(self) -> "Settings":
+    def resolve_database_url(self) -> Settings:
         """Use a URL-encoded DSN while preserving the original database password."""
         if self.database_url:
             return self

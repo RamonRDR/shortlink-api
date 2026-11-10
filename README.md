@@ -68,6 +68,9 @@ Python **3.14**, PostgreSQL **16**, or Docker Engine with Compose.
     curl http://localhost:8000/health
 
 The Compose app waits for the database health check and runs Alembic migrations.
+Compose passes `POSTGRES_PASSWORD` separately to the application, which
+percent-encodes it when building the PostgreSQL connection URL. Characters
+such as `@`, `:`, `/`, `?`, and `#` are supported in database passwords.
 Use only test/development credentials. The actual .env is ignored by Git.
 
 ### Local Python
@@ -77,9 +80,15 @@ Start PostgreSQL and configure these environment variables:
 | Variable | Description |
 | --- | --- |
 | SHORTLINK_DATABASE_URL | postgresql+psycopg://user:password@localhost:5432/shortlink |
-| SHORTLINK_ADMIN_API_KEY | Random secret with at least 32 characters |
+| SHORTLINK_ADMIN_API_KEY | ASCII-only random secret with at least 32 characters |
 | SHORTLINK_BASE_URL | Public base URL, for example http://localhost:8000 |
 | SHORTLINK_MAX_REQUESTS_PER_MINUTE | Per-process admin request limit; default 60 |
+
+When setting `SHORTLINK_DATABASE_URL` yourself, percent-encode special
+characters in the password. Alternatively, use `SHORTLINK_DB_PASSWORD`
+with `SHORTLINK_DB_HOST`, `SHORTLINK_DB_PORT`, `SHORTLINK_DB_USER`, and
+`SHORTLINK_DB_NAME` (defaults: `db`, `5432`, `shortlink`, `shortlink`).
+API keys must use ASCII characters to avoid invalid-header errors.
 
     python3.14 -m venv .venv
     . .venv/bin/activate
@@ -186,7 +195,7 @@ With a dedicated test database (its name must end in _test) and configured envir
     docker build .
 
 GitHub Actions runs Ruff lint/format, mypy, Alembic migration and drift checks,
-PostgreSQL integration tests, Python wheel packaging, and Docker image build
+PostgreSQL integration tests, Python wheel packaging, and a Docker Compose startup/health smoke test
 on pull requests targeting `main` and pushes to `main`. Workflows use hosted
 runners and temporary test credentials; they **do not deploy or publish**.
 

@@ -65,8 +65,11 @@ Requisitos: Python **3.14**, PostgreSQL **16** o Docker con Compose.
     docker compose up --build -d
     curl http://localhost:8000/health
 
-Compose espera la disponibilidad del banco y ejecuta migraciones.
-No use credenciales de ejemplo en producción; .env está ignorado por Git.
+Compose espera la disponibilidad del banco y ejecuta migraciones. Envía
+`POSTGRES_PASSWORD` por separado a la aplicación, que codifica los caracteres
+reservados al construir la URL de PostgreSQL. Se admiten `@`, `:`, `/`,
+`?` y `#` en la contraseña. No utilice credenciales de ejemplo en
+producción; Git ignora el archivo .env.
 
 **Python local:**
 
@@ -75,9 +78,15 @@ Configure PostgreSQL y estas variables:
 | Variable | Descripción |
 | --- | --- |
 | SHORTLINK_DATABASE_URL | postgresql+psycopg://usuario:clave@localhost:5432/shortlink |
-| SHORTLINK_ADMIN_API_KEY | Secreto aleatorio de al menos 32 caracteres |
+| SHORTLINK_ADMIN_API_KEY | Secreto ASCII aleatorio de al menos 32 caracteres |
 | SHORTLINK_BASE_URL | URL pública, por ejemplo http://localhost:8000 |
 | SHORTLINK_MAX_REQUESTS_PER_MINUTE | Límite administrativo por proceso; predeterminado 60 |
+
+Si configura `SHORTLINK_DATABASE_URL` manualmente, codifique los caracteres
+especiales de la contraseña mediante porcentajes. También puede configurar
+`SHORTLINK_DB_PASSWORD` junto con `SHORTLINK_DB_HOST`, `SHORTLINK_DB_PORT`,
+`SHORTLINK_DB_USER` y `SHORTLINK_DB_NAME` (valores predeterminados:
+`db`, `5432`, `shortlink`, `shortlink`). La API key debe ser ASCII.
 
     python3.14 -m venv .venv
     . .venv/bin/activate
@@ -175,7 +184,7 @@ Con una base de datos de prueba aislada (nombre terminado en _test) y variables 
 
 GitHub Actions ejecuta Ruff lint/format, mypy, migraciones y comprobación
 de cambios pendientes del esquema Alembic, pruebas PostgreSQL, construcción
-del wheel Python y de la imagen Docker en PR dirigidos a `main` y pushes
+del wheel Python y de arranque/health de Docker Compose en PR dirigidos a `main` y pushes
 a `main`. Usa runners hospedados y credenciales de prueba, sin desplegar
 ni publicar artefactos.
 
