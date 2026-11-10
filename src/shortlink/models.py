@@ -10,7 +10,6 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
-    Integer,
     String,
     UniqueConstraint,
     func,
@@ -58,7 +57,7 @@ class DailyClick(Base):
         Index("ix_daily_clicks_day", "day"),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     link_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("links.id", ondelete="CASCADE"), nullable=False
     )

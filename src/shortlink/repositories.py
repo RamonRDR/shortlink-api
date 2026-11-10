@@ -42,7 +42,10 @@ def increment_and_track(session: Session, code: str, now: datetime) -> str | Non
             Link.is_active.is_(True),
             (Link.expires_at.is_(None) | (Link.expires_at > now)),
         )
-        .values(click_count=Link.click_count + 1, last_accessed_at=now)
+        .values(
+            click_count=Link.click_count + 1,
+            last_accessed_at=func.greatest(func.coalesce(Link.last_accessed_at, now), now),
+        )
         .returning(Link.id, Link.target_url)
     )
     result = session.execute(statement).one_or_none()

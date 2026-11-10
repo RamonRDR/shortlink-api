@@ -43,3 +43,19 @@ signup, automated publication, Redis or queue is included.
 The default Compose/Docker invocation disables Uvicorn HTTP access logs,
 which otherwise include client IP addresses. Keep access logs disabled or
 redacted in production and configure the reverse proxy accordingly.
+
+## 008: Connection strings and administrator credentials
+Compose supplies the database password as a separate environment variable.
+SQLAlchemy constructs and escapes the DSN, so reserved characters in the
+password cannot be confused with URL delimiters. An explicit
+SHORTLINK_DATABASE_URL remains supported for local/CI use; credentials in
+manually configured URLs must already be percent-encoded. Administrator keys
+must be ASCII to support safe constant-time comparisons; invalid headers
+return 401 rather than server errors.
+
+## 009: Monotonic access timestamps and scalable counters
+A conditional SQL greatest/coalesce expression ensures delayed redirects
+cannot move last_accessed_at backwards. The counter increment and UTC daily
+upsert remain within one PostgreSQL transaction. Alembic revision 0002 widens
+the daily_clicks surrogate ID and its serial sequence to bigint; the
+migration also upgrades databases already at revision 0001.
